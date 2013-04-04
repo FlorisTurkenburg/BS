@@ -21,6 +21,9 @@
 #define MAX_ARGS        (1024)
 #define MAX_LINE        (2 * MAX_ARGS)
 
+typedef void (*sighandler_t)(int);
+char c = '\0';
+
 /* define a builtinFun type for later use */
 typedef int builtinFun (unsigned char *command);
 
@@ -206,16 +209,22 @@ int scanLine (FILE * fd, int *commandNo) {
    ensure that your shell is not vulnerable to a ^C and such.
    Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
 
-int main (int argc, char *argv[]) {
+void handle_signal(int signo)
+{
+	printf("\n> ");
+	fflush(stdout);
+}
 
-    char c = "\0";
-    printf"\n[MY_SHELL ] ");
-    while (c != EOF) {
-        c = getchar();
-        if (c == "\n") {
-            printf("[MY_SHELL ] ");
-        }
-    }
-    printf("\n");
-    return 0;
+int main(int argc, char *argv[], char *envp[])
+{
+	signal(SIGINT, SIG_IGN);
+	signal(SIGINT, handle_signal);
+	printf("> ");
+	while(c != EOF) {
+		c = getchar();
+		if(c == '\n')
+			printf("> ");
+	}
+	printf("\n");
+	return 0;
 }
