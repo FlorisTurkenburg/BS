@@ -61,16 +61,14 @@ void executeCommand (unsigned char *commandStr) {
        characters */
     int i = 1;
     args[0] = strtok (commandStr, " \t\n");
-    while ((args[i] = strtok (NULL, " \t\n")))
-      {
+    while ((args[i] = strtok (NULL, " \t\n"))) {
         i++;
-      }
-    if (strchr (args[0], '/'))
-      {
-          fprintf (stderr, "Attempt to call function '%s' not in the PATH environment variable\n",
-                   args[0]);
+    }
+    if (strchr (args[0], '/')) {
+          fprintf (stderr, "Attempt to call function '%s' not"
+                           "in the PATH environment variable\n", args[0]);
           exit (-1);
-      }
+    }
     /* With the use of execvp, it is not necessary to provide the
        absolute path to the executable. The system will automatically
        find the first executable with the requested name in the
@@ -162,22 +160,19 @@ int scanLine (FILE * fd, int *commandNo) {
 
     /* Is stderr the best choice? I'm not sure */
     fprintf (stderr, "myShell[%d]>", *commandNo);
-    if (fgets (commandStr, MAX_LINE, fd) == NULL)
-      {
+    if (fgets (commandStr, MAX_LINE, fd) == NULL) {
 
           /* Handle EOF condition and return appropriate value */
-      }
+    }
     (*commandNo)++;
 
     /* Check for a builtin */
-    for (i = 0; eigen[i].fun; i++)
-      {
+    for (i = 0; eigen[i].fun; i++) {
           int l = strlen (eigen[i].name);
           if (l == 0)
               break;
           if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
-              (isspace (commandStr[l])))
-            {
+              (isspace (commandStr[l]))) {
 
                 /* I think, we must have a builtin now, so call the
                    appropriate function and return.
@@ -186,8 +181,8 @@ int scanLine (FILE * fd, int *commandNo) {
                    It will also not work if the command is preceded by whitespace */
 
                 return eigen[i].fun (commandStr);
-            }
-      }
+         }
+    }
 
     /* So now we get to the hard part. The commandline specifies one or more
        programs that must be executed. We need to find out if there is a pipe
