@@ -209,14 +209,12 @@ int scanLine (FILE * fd, int *commandNo) {
    ensure that your shell is not vulnerable to a ^C and such.
    Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
 
-void handle_signal(int signo)
-{
+void handle_signal(int signo) {
 	printf("\n> ");
 	fflush(stdout);
 }
 
-int main(int argc, char *argv[], char *envp[])
-{
+int main(int argc, char *argv[], char *envp[]) {
 	signal(SIGINT, SIG_IGN);
 	signal(SIGINT, handle_signal);
 	printf("> ");
