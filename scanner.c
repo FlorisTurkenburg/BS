@@ -169,7 +169,7 @@ int scanLine (FILE * fd, int *commandNo) {
     /* Check for a builtin */
     for (i = 0; eigen[i].fun; i++)
       {
-          int     l = strlen (eigen[i].name);
+          int l = strlen (eigen[i].name);
           if (l == 0)
               break;
           if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
@@ -200,9 +200,22 @@ int scanLine (FILE * fd, int *commandNo) {
     return rv;
 }
 
-int main (int argc, char *argv[]) {
+
 
 /* This is to be the main routine. Start with one or more calls to sigaction to
    ensure that your shell is not vulnerable to a ^C and such.
    Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
+
+int main (int argc, char *argv[]) {
+
+    char c = "\0";
+    printf"\n[MY_SHELL ] ");
+    while (c != EOF) {
+        c = getchar();
+        if (c == "\n") {
+            printf("[MY_SHELL ] ");
+        }
+    }
+    printf("\n");
+    return 0;
 }
