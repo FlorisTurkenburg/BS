@@ -48,9 +48,7 @@ static builtin eigen[] = {
    containing a single command (the line has already been cut at the pipe
    symbols), parse that string to fnd the command and its parameters, and
    then execute that command. */
-void
-executeCommand (unsigned char *commandStr)
-{
+void executeCommand (unsigned char *commandStr) {
     unsigned char *args[MAX_ARGS] = { NULL };
 
     /* This is not really elegant, but
@@ -58,7 +56,7 @@ executeCommand (unsigned char *commandStr)
        input-line length, it cannot contain
        more than half as many arguments as
        characters */
-    int     i = 1;
+    int i = 1;
     args[0] = strtok (commandStr, " \t\n");
     while ((args[i] = strtok (NULL, " \t\n")))
       {
@@ -81,9 +79,7 @@ executeCommand (unsigned char *commandStr)
     exit (-2);
 }
 
-void
-parseCommand (unsigned char *commandStr)
-{
+void parseCommand (unsigned char *commandStr) {
     unsigned char *pipeChar;
 
     /* We enter this routine as the parent shell */
@@ -153,15 +149,13 @@ parseCommand (unsigned char *commandStr)
     executeCommand (commandStr);
 }
 
-int
-scanLine (FILE * fd, int *commandNo)
-{
+int scanLine (FILE * fd, int *commandNo) {
     unsigned char commandStr[MAX_LINE];        /* This is not a very elegant
                                            solution. But input lines
                                            should not be infinitely long
                                            anyway */
-    int     i;
-    int     rv = 0;
+    int i;
+    int rv = 0;
 
     /* Is stderr the best choice? I'm not sure */
     fprintf (stderr, "myShell[%d]>", *commandNo);
@@ -206,9 +200,7 @@ scanLine (FILE * fd, int *commandNo)
     return rv;
 }
 
-int
-main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
 
 /* This is to be the main routine. Start with one or more calls to sigaction to
    ensure that your shell is not vulnerable to a ^C and such.
