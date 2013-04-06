@@ -1,1 +1,1 @@
-all: listing9
+all: scanner

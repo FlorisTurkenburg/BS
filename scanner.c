@@ -236,3 +236,21 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 	return 0;
 }
+
+int do_exit (unsigned char *command){
+    return 0;
+}
+
+
+int do_cd (unsigned char *command){
+    return 0;
+}
+
+
+int do_source (unsigned char *command){
+    return 0;
+}
+
+
+
+
