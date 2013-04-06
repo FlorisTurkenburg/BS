@@ -23,6 +23,7 @@
 
 typedef void (*sighandler_t)(int);
 char c = '\0';
+static char* cmd_line_args[100];
 
 /* define a builtinFun type for later use */
 typedef int builtinFun (unsigned char *command);
@@ -32,8 +33,7 @@ int do_cd (unsigned char *command);
 int do_source (unsigned char *command);
 
 /* define a table associating functions with commands */
-typedef struct builtin
-{
+typedef struct builtin {
     builtinFun *fun;
     unsigned char name[32];
 } builtin;
@@ -49,10 +49,10 @@ static builtin eigen[] = {
 
 /* The function executeCommand will take (a part of) the command line
    containing a single command (the line has already been cut at the pipe
-   symbols), parse that string to fnd the command and its parameters, and
+   symbols), parse that string to find the command and its parameters, and
    then execute that command. */
 void executeCommand (unsigned char *commandStr) {
-    unsigned char *args[MAX_ARGS] = { NULL };
+    unsigned char *args[MAX_ARGS] = {NULL};
 
     /* This is not really elegant, but
        given the fact that we have a limited
@@ -67,7 +67,7 @@ void executeCommand (unsigned char *commandStr) {
     if (strchr (args[0], '/')) {
           fprintf (stderr, "Attempt to call function '%s' not"
                            "in the PATH environment variable\n", args[0]);
-          exit (-1);
+          exit(-1);
     }
     /* With the use of execvp, it is not necessary to provide the
        absolute path to the executable. The system will automatically
@@ -77,7 +77,7 @@ void executeCommand (unsigned char *commandStr) {
     /* Here you should be about ready to call execvp. Do not forget to
        handle the situation where execvp does return */
 
-    exit (-2);
+    exit(-2);
 }
 
 void parseCommand (unsigned char *commandStr) {
@@ -159,7 +159,7 @@ int scanLine (FILE * fd, int *commandNo) {
     int rv = 0;
 
     /* Is stderr the best choice? I'm not sure */
-    fprintf (stderr, "myShell[%d]>", *commandNo);
+    fprintf(stderr, "myShell[%d]>", *commandNo);
     if (fgets (commandStr, MAX_LINE, fd) == NULL) {
 
           /* Handle EOF condition and return appropriate value */
@@ -168,7 +168,7 @@ int scanLine (FILE * fd, int *commandNo) {
 
     /* Check for a builtin */
     for (i = 0; eigen[i].fun; i++) {
-          int l = strlen (eigen[i].name);
+          int l = strlen(eigen[i].name);
           if (l == 0)
               break;
           if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
@@ -188,7 +188,7 @@ int scanLine (FILE * fd, int *commandNo) {
        programs that must be executed. We need to find out if there is a pipe
        symbol, which means that the plumbing must be created correctly */
 
-    parseCommand (commandStr);
+    parseCommand(commandStr);
 
     /* The child should not return from parseCommand, I think.
        The code below belongs to the parent - it must return after
@@ -204,8 +204,17 @@ int scanLine (FILE * fd, int *commandNo) {
    ensure that your shell is not vulnerable to a ^C and such.
    Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
 
+/* We want each seperate word from the command line in an array instead of
+   an array of characters. */
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
+    char c;
+    char *temp = (char *)malloc(sizeof(char) * 100);
+
+
+
+
+
     struct sigaction new_sa;
     struct sigaction old_sa;
     sigfillset(&new_sa.sa_mask);
@@ -227,15 +236,26 @@ int main(int argc, char *argv[]) {
     new_sa_3.sa_flags = 0;
     sigaction(SIGQUIT, &new_sa_3, 0);    
 
-    printf("> ");
+    /*printf("> ");
 	while(c != EOF) {
 		c = getchar();
-		if(c == '\n')
-			printf("> ");
+		switch(c) {
+            case'\n': 
+                if(temp[0] == '\0') {
+                    printf("> ");
+                } else {
+                    
+                    
 	}
-	printf("\n");
+	printf("\n");*/
+
+    while(1) {
+        scanLine();
+    }
 	return 0;
 }
+
+
 
 int do_exit (unsigned char *command){
     return 0;
