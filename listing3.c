@@ -37,9 +37,120 @@ int main(int argc, char *argv[]) {
     printf("> ");
 	while(c != EOF) {
 		c = getchar();
-		if(c == '\n')
-			printf("> ");
+		switch(c) {
+            case '\n':
+                    bzero(tmp, sizeof(tmp));
+                    break;
+            default: 
+                    strncat(tmp, &c, 1);
+                    break;
+        }			
 	}
 	printf("\n");
 	return 0;
+}
+
+void fill_argv(char *tmp_argv)
+{
+	char *foo = tmp_argv;
+	int index = 0;
+	char ret[100];
+	bzero(ret, 100);
+	while(*foo != '\0') {
+		if(index == 50)
+			break;
+
+		if(*foo == ' ') {
+			if(my_argv[index] == NULL)
+				my_argv[index] = (char *)malloc(sizeof(char) * strlen(ret) + 1);
+			else {
+				bzero(my_argv[index], strlen(my_argv[index]));
+			}
+			strncpy(my_argv[index], ret, strlen(ret));
+			strncat(my_argv[index], "\0", 1);
+			bzero(ret, 100);
+			index++;
+		} else {
+			strncat(ret, foo, 1);
+		}
+		foo++;
+	}
+	if(ret[0] != '\0') { 
+		my_argv[index] = (char *)malloc(sizeof(char) * strlen(ret) + 1);
+		strncpy(my_argv[index], ret, strlen(ret));
+		strncat(my_argv[index], "\0", 1);
+	}
+}
+
+
+int attach_path(char *cmd)
+{
+	char ret[100];
+	int index;
+	int fd;
+	bzero(ret, 100);
+	for(index=0;search_path[index]!=NULL;index++) {
+		strcpy(ret, search_path[index]);
+		strncat(ret, cmd, strlen(cmd));
+		if((fd = open(ret, O_RDONLY)) > 0) {
+			strncpy(cmd, ret, strlen(ret));
+			close(fd);
+			return 0;
+		}
+	}
+	return 0;
+}
+
+void get_path_string(char **tmp_envp, char *bin_path)
+{
+	int count = 0;
+	char *tmp;
+	while(1) {
+		tmp = strstr(tmp_envp[count], "PATH");
+		if(tmp == NULL) {
+			count++;
+		} else {
+			break;
+		}
+	}
+        strncpy(bin_path, tmp, strlen(tmp));
+}
+
+void insert_path_str_to_search(char *path_str) 
+{
+	int index=0;
+	char *tmp = path_str;
+	char ret[100];
+
+	while(*tmp != '=')
+		tmp++;
+	tmp++;
+
+	while(*tmp != '\0') {
+		if(*tmp == ':') {
+			strncat(ret, "/", 1);
+			search_path[index] = (char *) malloc(sizeof(char) * (strlen(ret) + 1));
+			strncat(search_path[index], ret, strlen(ret));
+			strncat(search_path[index], "\0", 1);
+			index++;
+			bzero(ret, 100);
+		} else {
+			strncat(ret, tmp, 1);
+		}
+		tmp++;
+	}
+}
+
+void call_execve(char *cmd)
+{
+	int i;
+	if(fork() == 0) {
+		i = execlp(cmd, my_argv, my_envp);
+		if(i < 0) {
+			printf("%s: %s\n", cmd, "command not found");
+			exit(1);		
+		}
+	} else {
+		wait(NULL);
+	}
 }
