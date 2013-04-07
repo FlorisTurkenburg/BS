@@ -54,13 +54,13 @@ void executeCommand (unsigned char *commandStr) {
 
 
     int i = 1;
-    args[0] = strtok (commandStr, " \t\n");
-    while ((args[i] = strtok (NULL, " \t\n"))) {
+    args[0] = strtok(commandStr, " \t\n");
+    while ((args[i] = strtok(NULL, " \t\n"))) {
         i++;
     }
-    if (strchr (args[0], '/')) {
-          fprintf (stderr, "Attempt to call function '%s' not"
-                           "in the PATH environment variable\n", args[0]);
+    if (strchr(args[0], '/')) {
+          fprintf(stderr, "Attempt to call function '%s' not"
+                          "in the PATH environment variable\n", args[0]);
           exit(-1);
     }
 
@@ -69,6 +69,7 @@ void executeCommand (unsigned char *commandStr) {
 
 void parseCommand (unsigned char *commandStr) {
     unsigned char *pipeChar;
+
 
     if ((pipeChar = strchr (commandStr, '|')))
       {
@@ -97,8 +98,9 @@ void parseCommand (unsigned char *commandStr) {
           parseCommand (pipeChar + 1);
       }
 
+
     /* No '|' left in string - just execute command */
-    executeCommand (commandStr);
+    executeCommand(commandStr);
 }
 
 int scanLine (FILE * fd) {
@@ -108,15 +110,18 @@ int scanLine (FILE * fd) {
 
     if (fgets (commandStr, MAX_LINE, fd) == NULL) {
 
+
     }
 
     for (i = 0; eigen[i].fun; i++) {
         int l = strlen(eigen[i].name);
         if (l == 0)
+
               break;
         if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
            (isspace (commandStr[l]))) {
             return eigen[i].fun (commandStr);
+
         }
     }
 
