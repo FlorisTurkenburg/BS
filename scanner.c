@@ -204,16 +204,10 @@ int scanLine (FILE * fd, int *commandNo) {
    ensure that your shell is not vulnerable to a ^C and such.
    Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
 
-/* We want each seperate word from the command line in an array instead of
-   an array of characters. */
 
 int main(int argc, char *argv[], char *envp[]) {
     char c;
     char *temp = (char *)malloc(sizeof(char) * 100);
-
-
-
-
 
     struct sigaction new_sa;
     struct sigaction old_sa;
@@ -250,7 +244,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	printf("\n");*/
 
     while(1) {
-        scanLine();
+        scanLine(, &argc);
     }
 	return 0;
 }
