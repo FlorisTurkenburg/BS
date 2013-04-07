@@ -24,6 +24,7 @@
 typedef void (*sighandler_t)(int);
 char c = '\0';
 static char* cmd_line_args[100];
+static int terminate = 0;
 
 /* define a builtinFun type for later use */
 typedef int builtinFun (unsigned char *command);
@@ -47,18 +48,11 @@ static builtin eigen[] = {
 };
 
 
-/* The function executeCommand will take (a part of) the command line
-   containing a single command (the line has already been cut at the pipe
-   symbols), parse that string to find the command and its parameters, and
-   then execute that command. */
+
 void executeCommand (unsigned char *commandStr) {
     unsigned char *args[MAX_ARGS] = {NULL};
 
-    /* This is not really elegant, but
-       given the fact that we have a limited
-       input-line length, it cannot contain
-       more than half as many arguments as
-       characters */
+
     int i = 1;
     args[0] = strtok (commandStr, " \t\n");
     while ((args[i] = strtok (NULL, " \t\n"))) {
@@ -69,13 +63,6 @@ void executeCommand (unsigned char *commandStr) {
                            "in the PATH environment variable\n", args[0]);
           exit(-1);
     }
-    /* With the use of execvp, it is not necessary to provide the
-       absolute path to the executable. The system will automatically
-       find the first executable with the requested name in the
-       search path environment variable PATH */
-
-    /* Here you should be about ready to call execvp. Do not forget to
-       handle the situation where execvp does return */
 
     exit(-2);
 }
@@ -83,42 +70,6 @@ void executeCommand (unsigned char *commandStr) {
 void parseCommand (unsigned char *commandStr) {
     unsigned char *pipeChar;
 
-    /* We enter this routine as the parent shell */
-    /* If there is no '|' on the command-line, we fork and execute the first
-       program, taking care to pass it the appropriate parameters.
-       If the command-line has the following structure:
-       progr1 par1 par2 | progr2 par3 par4
-       or
-       progr1 par1 par2 | progr2 par3 par4 | progr3 par5 par6
-       the shell should call pipe(), 
-       then call fork(), letting the child know that it should connect
-       its output to the pipe, and what program it should execute with
-       what parameters.
-       The code for the child should then do this.
-       R:   the parent should then close the writing side of the pipe
-       parse the remainder of the command string. 
-       If there is another '|', it should once again call pipe()
-       and fork again, letting the second child know
-       a) to connect its input to the first pipe
-       b) if applicable, to connect its output to the second pipe
-       c) what program it should execute and with which parameters
-       The code for the child should effectuate this
-       If this was the final child in the chain, the parent returns, 
-       otherwise it jumps back to R:
-       N.B. The parent shell should never connect input or output to a pipe,
-       such connection should only be made after a fork.
-       N.B.2 The above recipe will result in a process tree where all
-       programs on the command line are executed by direct descendants of
-       the parent shell. For one, this makes it easier to check if all
-       such programs have completed before waking up the shell again.
-       N.B.3 It may be useful to create a record of the child processes created
-       and their IDs
-       N.B.4 Remember to undo the effect of sigaction in the child processes -
-       it must be possible to terminate such processes by pressing ^C
-     */
-    /* Now look for the first '|' in the string. We'll be rather obtuse
-       about this and disregard " and * and ' and all other usual control
-       characters */
     if ((pipeChar = strchr (commandStr, '|')))
       {
           unsigned char commandStr1[MAX_LINE];
@@ -150,64 +101,47 @@ void parseCommand (unsigned char *commandStr) {
     executeCommand (commandStr);
 }
 
-int scanLine (FILE * fd, int *commandNo) {
-    unsigned char commandStr[MAX_LINE];        /* This is not a very elegant
-                                           solution. But input lines
-                                           should not be infinitely long
-                                           anyway */
+int scanLine (FILE * fd) {
+    unsigned char commandStr[MAX_LINE];       
     int i;
     int rv = 0;
 
-    /* Is stderr the best choice? I'm not sure */
-    fprintf(stderr, "myShell[%d]>", *commandNo);
     if (fgets (commandStr, MAX_LINE, fd) == NULL) {
 
-          /* Handle EOF condition and return appropriate value */
     }
-    (*commandNo)++;
 
-    /* Check for a builtin */
     for (i = 0; eigen[i].fun; i++) {
-          int l = strlen(eigen[i].name);
-          if (l == 0)
+        int l = strlen(eigen[i].name);
+        if (l == 0)
               break;
-          if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
-              (isspace (commandStr[l]))) {
-
-                /* I think, we must have a builtin now, so call the
-                   appropriate function and return.
-                   This procedure will not work for the !n type
-                   "builtins"
-                   It will also not work if the command is preceded by whitespace */
-
-                return eigen[i].fun (commandStr);
-         }
+        if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
+           (isspace (commandStr[l]))) {
+            return eigen[i].fun (commandStr);
+        }
     }
-
-    /* So now we get to the hard part. The commandline specifies one or more
-       programs that must be executed. We need to find out if there is a pipe
-       symbol, which means that the plumbing must be created correctly */
 
     parseCommand(commandStr);
-
-    /* The child should not return from parseCommand, I think.
-       The code below belongs to the parent - it must return after
-       it has finished waiting. Fill rv with some appropriate
-       return value. Wait may provide such a value. */
 
     return rv;
 }
 
 
+void run_shell() {
+    char *input;
+    //getcwd(cwd, sizeof(cwd));
 
-/* This is to be the main routine. Start with one or more calls to sigaction to
-   ensure that your shell is not vulnerable to a ^C and such.
-   Provide alternate handlers for at least SIGINT, SIGQUIT and SIGTERM */
+    do {
+        printf("myShell>");
+        input = scanline(stdin);
+        if(!terminate && input) {
+            parse_input(input);
+        }
+        free(input);
+    }while(!terminated);
+}
 
 
 int main(int argc, char *argv[], char *envp[]) {
-    char c;
-    char *temp = (char *)malloc(sizeof(char) * 100);
 
     struct sigaction new_sa;
     struct sigaction old_sa;
@@ -230,23 +164,7 @@ int main(int argc, char *argv[], char *envp[]) {
     new_sa_3.sa_flags = 0;
     sigaction(SIGQUIT, &new_sa_3, 0);    
 
-    /*printf("> ");
-	while(c != EOF) {
-		c = getchar();
-		switch(c) {
-            case'\n': 
-                if(temp[0] == '\0') {
-                    printf("> ");
-                } else {
-                    
-                    
-	}
-	printf("\n");*/
-
-    while(1) {
-        scanLine(, &argc);
-    }
-	return 0;
+    run_shell();
 }
 
 
