@@ -1,19 +1,6 @@
-/*
- * Program:     My own shell
- * Author:      Vincent Hagen
- * Student#:    10305602
- *
- * Description: 
- *      Part of simpleshell.c, 
- *      this file covers the interaction with the pipe_list_t
- *      
- */
+#include "piping.h"
+#include "scanner.h"
 
-#include "pipes.h"
-#include "simpleshell.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 /*  Creates pipes, 2 for each counted pipe char (count) */
 pipe_list_t *create_pipes(int count) {

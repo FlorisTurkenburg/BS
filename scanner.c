@@ -15,17 +15,6 @@
 #include "scanner.h"
 #include "piping.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <string.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/wait.h>
-
-
-
 #define MAX_ARGS (1024)
 #define MAX_LINE (2 * MAX_ARGS)
 
@@ -57,8 +46,8 @@ static struct builtin_Func eigen[] = {
 };
 
 
-int check_allocation(void *ptr) {
-    if(!ptr) {
+int check_allocation(void *pntr) {
+    if(!pntr) {
         perror("Couldn't allocate memory");
         terminate = 1;
         return 0;
@@ -92,8 +81,8 @@ void parseCommand (unsigned char *commandStr) {
     if ((pipeChar = strchr (commandStr, '|')))
       {
           unsigned char commandStr1[MAX_LINE];
-          unsigned char *cptr = commandStr;
-          unsigned char *cptr1 = commandStr1;
+          unsigned char *cpntr = commandStr;
+          unsigned char *cpntr1 = commandStr1;
 
           /* There appears to be a '|', so we must make a pipe and 
              do all the required file manipulation here. See man pages
@@ -105,11 +94,11 @@ void parseCommand (unsigned char *commandStr) {
 
           /* Process A: prepare to execute first command */
           /* Now construct command string for the first command */
-          while (cptr != pipeChar)
+          while (cpntr != pipeChar)
             {
-                *(cptr1++) = *(cptr++);
+                *(cpntr1++) = *(cpntr++);
             }
-          *cptr1 = 0;
+          *cpntr1 = 0;
           executeCommand (commandStr1);
 
           /* Process B: Continue parsing recursively where we left off */
