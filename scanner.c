@@ -1,15 +1,19 @@
-/* This skeleton code is provided for the practical work for the "BS"
-   course 2012-2013 at the Universiteit van Amsterdam. It is untested code that
-   shows how a command line could possibly be parsed by a very simple
-   shell.
-   (C) Universiteit van Amsterdam, 1997 - 2013
-   Author: G.D. van Albada
-           G.D.vanAlbada@uva.nl
-   Date:   October 1, 1997
+/*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*/
 
-   At least one problem is known: a command string containg the (illegal)
-   combination '||' will lead to severe problems - so add extra tests.
-   */
+#include "scanner.h"
+#include "piping.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,29 +21,34 @@
 #include <ctype.h>
 #include <string.h>
 #include <signal.h>
+#include <errno.h>
+#include <sys/wait.h>
 
-#define MAX_ARGS        (1024)
-#define MAX_LINE        (2 * MAX_ARGS)
 
-typedef void (*sighandler_t)(int);
-char c = '\0';
-static char* cmd_line_args[100];
+
+#define MAX_ARGS (1024)
+#define MAX_LINE (2 * MAX_ARGS)
+
+
+typedef int builtinFun (char *command);
+
+
 static int terminate = 0;
+static int calls = 0;
 
-/* define a builtinFun type for later use */
-typedef int builtinFun (unsigned char *command);
 
-int do_exit (unsigned char *command);
-int do_cd (unsigned char *command);
-int do_source (unsigned char *command);
-
-/* define a table associating functions with commands */
-typedef struct builtin {
+struct builtin_Func {
     builtinFun *fun;
-    unsigned char name[32];
-} builtin;
+    char name[32];
+};
 
-static builtin eigen[] = {
+
+int do_exit(char *command);
+int do_cd(char *command);
+int do_source(char *command);
+
+
+static struct builtin_Func eigen[] = {
     {do_exit, "exit"},
     {do_cd, "cd"},
     {do_source, "source"},
@@ -47,6 +56,15 @@ static builtin eigen[] = {
     {NULL, ""}
 };
 
+
+int check_allocation(void *ptr) {
+    if(!ptr) {
+        perror("Couldn't allocate memory");
+        terminate = 1;
+        return 0;
+    }
+    return 1;
+}
 
 
 void executeCommand (unsigned char *commandStr) {
@@ -103,7 +121,7 @@ void parseCommand (unsigned char *commandStr) {
     executeCommand(commandStr);
 }
 
-int scanLine (FILE * fd) {
+int scanLine(FILE *fd) {
     unsigned char commandStr[MAX_LINE];       
     int i;
     int rv = 0;
@@ -142,7 +160,7 @@ void run_shell() {
             parse_input(input);
         }
         free(input);
-    }while(!terminated);
+    }while(!terminate);
 }
 
 
@@ -174,17 +192,22 @@ int main(int argc, char *argv[], char *envp[]) {
 
 
 
-int do_exit (unsigned char *command){
+int do_exit (char *command){
+    if(!calls) {
+        terminate = 1;
+    } else {
+        calls--;
+    }
+    return 1;
+}
+
+
+int do_cd(char *command){
     return 0;
 }
 
 
-int do_cd (unsigned char *command){
-    return 0;
-}
-
-
-int do_source (unsigned char *command){
+int do_source(char *command){
     return 0;
 }
 
