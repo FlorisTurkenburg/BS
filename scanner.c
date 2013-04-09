@@ -165,23 +165,20 @@ void run_shell() {
 
 
 int main(int argc, char *argv[], char *envp[]) {
+    struct sigaction new_sa, new_sa_2, new_sa_3;
+    struct sigaction old_sa, old_sa_2, old_sa_3;
 
-    struct sigaction new_sa;
-    struct sigaction old_sa;
     sigfillset(&new_sa.sa_mask);
     new_sa.sa_handler = SIG_IGN;
     new_sa.sa_flags = 0;
     sigaction(SIGINT, &new_sa, 0); 
 
-    struct sigaction new_sa_2;
-    struct sigaction old_sa_2;
     sigfillset(&new_sa_2.sa_mask);
     new_sa_2.sa_handler = SIG_IGN;
     new_sa_2.sa_flags = 0;
     sigaction(SIGTERM, &new_sa_2, 0); 
 
-    struct sigaction new_sa_3;
-    struct sigaction old_sa_3;
+    
     sigfillset(&new_sa_3.sa_mask);
     new_sa_3.sa_handler = SIG_IGN;
     new_sa_3.sa_flags = 0;
