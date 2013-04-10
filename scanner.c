@@ -46,6 +46,14 @@ static struct builtin_Func eigen[] = {
 };
 
 
+void free_array(char ***array) {
+    for(int i = 0; (*array)[i]; i++) {
+        free((*array)[i]);
+    }
+    free(*array);
+} 
+
+
 int check_allocation(void *pntr) {
     if(!pntr) {
         perror("Couldn't allocate memory");
@@ -53,6 +61,28 @@ int check_allocation(void *pntr) {
         return 0;
     }
     return 1;
+}
+
+
+/*
+* trimwhitespace function from http://tinyurl.com/trimwhitespacestandard
+*/
+char *trimwhitespace(char *str) {
+    char *end;
+
+    while(isspace(*str)) str++;
+
+    if(*str == 0) {
+        return str;
+    }
+
+    end = str + strlen(str) - 1;
+    while(end > str && isspace(*end)) {
+        end--;
+    }
+    *(end+1) = 0;
+
+    return str;
 }
 
 
@@ -84,16 +114,6 @@ void parseCommand (unsigned char *commandStr) {
           unsigned char *cpntr = commandStr;
           unsigned char *cpntr1 = commandStr1;
 
-          /* There appears to be a '|', so we must make a pipe and 
-             do all the required file manipulation here. See man pages
-             for dup2 and pipe. */
-
-          /* Here we fork, I think. One process, e.g. the child
-             will execute the first command, the other will parse the
-             remainder of the commandstring */
-
-          /* Process A: prepare to execute first command */
-          /* Now construct command string for the first command */
           while (cpntr != pipeChar)
             {
                 *(cpntr1++) = *(cpntr++);
@@ -101,40 +121,53 @@ void parseCommand (unsigned char *commandStr) {
           *cpntr1 = 0;
           executeCommand (commandStr1);
 
-          /* Process B: Continue parsing recursively where we left off */
           parseCommand (pipeChar + 1);
       }
 
-
-    /* No '|' left in string - just execute command */
     executeCommand(commandStr);
 }
 
+
+
+
 int scanLine(FILE *fd) {
-    unsigned char commandStr[MAX_LINE];       
-    int i;
-    int rv = 0;
+    int maxsize = 32, size_left = maxsize;
+    char *input = malloc((sizeof(char)) * maxsize);
+    char c;
 
-    if (fgets (commandStr, MAX_LINE, fd) == NULL) {
+    if(!alloc_check(input)) 
+        return input;
 
+    while(!terminate && (c = fgetc(fd)) 
+        && c != EOF && c != '\n' && c != '#') {
+        input[maxsize - size_left] = c;
 
-    }
+        if(--size_left == 0) {
+            size_left = maxsize;
 
-    for (i = 0; eigen[i].fun; i++) {
-        int l = strlen(eigen[i].name);
-        if (l == 0)
+            input = realloc(input, maxsize *= 2);
 
-              break;
-        if ((0 == strncmp (commandStr, eigen[i].name, l)) &&
-           (isspace (commandStr[l]))) {
-            return eigen[i].fun (commandStr);
-
+            if(!alloc_check(input)) 
+                return input;
         }
     }
 
-    parseCommand(commandStr);
+    if(c != '\n' && fd == stdin) {
+        putchar('\n');
+    }
 
-    return rv;
+    // no input
+    if(!(maxsize - size_left)) {
+        free(input);
+        return NULL;
+    }
+
+    input[maxsize - size_left] = '\0';
+    input = realloc(input, maxsize - size_left + 1);
+    if(!alloc_check(input))
+        return input;
+
+    return input;
 }
 
 
@@ -146,7 +179,7 @@ void run_shell() {
         printf("myShell>");
         input = scanline(stdin);
         if(!terminate && input) {
-            parse_input(input);
+            parseCommand(input);
         }
         free(input);
     }while(!terminate);
@@ -189,13 +222,61 @@ int do_exit (char *command){
 
 
 int do_cd(char *command){
-    return 0;
+    char **args;
+    int arg_len = splitstr(command, &args, ' ');
+
+    if(arg_len < 1) {
+        printf("Too few arguments\n");
+        printf("Using: %s directory\n", args[0]);
+        return 0;
+    }
+
+    if(chdir(args[1]) < 0) {
+        perror("chdir() failed");
+    }
+
+    getcwd(cwd, sizeof(cwd));
+
+    free_array(&args);
+    
+    return 1;
 }
 
 
 int do_source(char *command){
-    return 0;
-}
+    FILE *fp;
+    char **args, *line;
+    int arg_len = splitstr(command, &args, ' ');
+    int source_num;
+
+    if(arg_len < 1) {
+        printf("Wrong amount of arguments\n");
+        printf("Using: %s file\n",args[0]);
+        return 0;
+    }
+
+    if((fp = fopen(args[1],"r")) == NULL) {
+        perror(args[0]);
+        return 0;
+    }
+
+    source_num = ++source_calls;
+
+    while(source_calls >= source_num && (line = get_line_input(fp)) ) {
+        parseCommand(line);
+        free(line);
+    }
+
+    if(source_calls) {
+        source_calls--;
+    }
+
+    free_array(&args);
+
+    fclose(fp);
+
+    return 1;
+}  
 
 
 
