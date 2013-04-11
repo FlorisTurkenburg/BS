@@ -145,7 +145,7 @@ void parseCommand(unsigned char *command_string) {
     unsigned char **segments;
 
     pipe_count = split_string(command_string, &segments, '|') - 1;
-    pipes = create_pipes(pipe_count);
+    pipes = make_pipes(pipe_count);
 
     for(int i = 0; segments[i]; i++) {
         pid = executeCommand(trimwhitespace(segments[i]), pipes);
