@@ -19,8 +19,6 @@
 #define MAX_LINE (2 * MAX_ARGS)
 
 
-
-
 static int terminate = 0;
 static int calls = 0;
 static char chwd[2048];
@@ -35,23 +33,23 @@ static struct builtin_Func eigen[] = {
 };
 
 
-void free_arrayay(char ***arrayay) {
-    for(int i = 0; (*arrayay)[i]; i++) {
-        free((*arrayay)[i]);
+void free_array(char ***array) {
+    for(int i = 0; (*array)[i]; i++) {
+        free((*array)[i]);
     }
-    free(*arrayay);
+    free(*array);
 } 
 
-int split_stringing(char *string, char ***array, char split_character) {
+int split_string(char *string, char ***array, char split_character) {
     int max = 5, size = 0, i = 0, j = 0, ignore = 0;
-    int stringing_length = strlen(string);
+    int string_length = strlen(string);
 
-    *array = malloc( (sizeof(char *)) * max );
+    *array = malloc((sizeof(char *)) * max);
     if(!check_allocation(*array)) return -1;
 
     /*  j defines the last place a cut was performed, 
         i the iterator */
-    while(i < stringing_length) {
+    while(i < string_length) {
         do {
             if(string[i] == '"' || string[i] == (char)39 ) // 39 = '
                 ignore = ~ignore;
@@ -121,45 +119,43 @@ char *trimwhitespace(char *string) {
 
 
 
-void executeCommand(unsigned char *commandStr) {
-    unsigned char *args[MAX_ARGS] = {NULL};
+void executeCommand(char *cmdline, pipe_list_t *pipes) {
+    int cmdline_length = strlen(cmdline), pid = 0;
+    
+    // check for buildin functions
+    for(int i = 0; own_commands[i].func; i++) {
+        int cmd_length = strlen(own_commands[i].name);
+        if(!strncmp(cmdline, own_commands[i].name, cmd_length) 
+        && (cmdline_length <= cmd_length || isspace(cmdline[cmd_length])) ) {
 
+            own_commands[i].func(cmdline);
 
-    int i = 1;
-    args[0] = strtok(commandstring, " \t\n");
-    while ((args[i] = strtok(NULL, " \t\n"))) {
-        i++;
-    }
-    if(strchr(args[0], '/')) {
-        fprintf(stderr, "Attempt to call function '%s' not"
-                        "in the PATH environment variable\n", args[0]);
-        exit(-1);
-    }
-
-    exit(-2);
-}
-
-void parseCommand(unsigned char *commandStr) {
-    unsigned char *pipeChar;
-
-
-    if((pipeChar = strchr(commandStr, '|'))) {
-        unsigned char commandStr1[MAX_LINE];
-        unsigned char *cpntr = commandStr;
-        unsigned char *cpntr1 = commandStr1;
-
-        while(cpntr != pipeChar) {
-            *(cpntr1++) = *(cpntr++);
+            return 0;
         }
-        *cpntr1 = 0;
-        executeCommand(commandStr1);
-        parseCommand(pipeChar + 1);
     }
 
-    executeCommand(commandstring);
+    /* no buildin, executes program */
+    pid = exec_program(cmdline, pipes);
+    return pid;
 }
 
+void parseCommand(unsigned char *command_string) {
+    int pipe_count, pid;
+    pipe_list_t *pipes;
+    char **parts;
 
+    // -1 since you need a pipe for every pipe char, not for every command
+    pipe_count = splitstr(input, &parts, '|') - 1;
+    pipes = create_pipes(pipe_count);
+
+    for(int i = 0; parts[i]; i++) {
+        pid = exec_command(trim(parts[i]), pipes);
+        waitpid(pid, NULL, 0);
+    }
+
+    cleanup_pipes(pipes);
+    cleanup_list(&parts);
+}
 
 
 int scanLine(FILE *fd) {
@@ -259,7 +255,7 @@ int do_exit(char *command){
 
 int do_cd(char *command){
     char **args;
-    int arg_len = split_stringing(command, &args, ' ');
+    int arg_len = split_string(command, &args, ' ');
 
     if(arg_len < 1) {
         printf("Too few arguments\n");
@@ -273,7 +269,7 @@ int do_cd(char *command){
 
     getcwd(chwd, sizeof(chwd));
 
-    free_arrayay(&args);
+    free_array(&args);
     
     return 1;
 }
@@ -282,7 +278,7 @@ int do_cd(char *command){
 int do_source(char *command){
     FILE *fp;
     char **args, *line;
-    int arg_len = split_stringing(command, &args, ' ');
+    int arg_len = split_string(command, &args, ' ');
     int source_num;
 
     if(arg_len < 1) {
@@ -307,7 +303,7 @@ int do_source(char *command){
         calls--;
     }
 
-    free_arrayay(&args);
+    free_array(&args);
 
     fclose(fp);
 
