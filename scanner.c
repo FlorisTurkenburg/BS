@@ -119,16 +119,16 @@ char *trimwhitespace(char *string) {
 
 
 
-void executeCommand(char *cmdline, pipe_list_t *pipes) {
+void executeCommand(char *cmdline, pipes_list *pipes) {
     int cmdline_length = strlen(cmdline), pid = 0;
     
     // check for buildin functions
-    for(int i = 0; own_commands[i].func; i++) {
-        int cmd_length = strlen(own_commands[i].name);
-        if(!strncmp(cmdline, own_commands[i].name, cmd_length) 
+    for(int i = 0; eigen[i].fun; i++) {
+        int cmd_length = strlen(eigen[i].name);
+        if(!strncmp(cmdline, eigen[i].name, cmd_length) 
         && (cmdline_length <= cmd_length || isspace(cmdline[cmd_length])) ) {
 
-            own_commands[i].func(cmdline);
+            eigen[i].fun(cmdline);
 
             return 0;
         }
@@ -141,20 +141,19 @@ void executeCommand(char *cmdline, pipe_list_t *pipes) {
 
 void parseCommand(unsigned char *command_string) {
     int pipe_count, pid;
-    pipe_list_t *pipes;
-    char **parts;
+    pipes_list *pipes;
+    char **segments;
 
-    // -1 since you need a pipe for every pipe char, not for every command
-    pipe_count = splitstr(input, &parts, '|') - 1;
+    pipe_count = splitstr(command_string, &segments, '|') - 1;
     pipes = create_pipes(pipe_count);
 
-    for(int i = 0; parts[i]; i++) {
-        pid = exec_command(trim(parts[i]), pipes);
+    for(int i = 0; segments[i]; i++) {
+        pid = exec_command(trim(segments[i]), pipes);
         waitpid(pid, NULL, 0);
     }
 
     cleanup_pipes(pipes);
-    cleanup_list(&parts);
+    cleanup_list(&segments);
 }
 
 
