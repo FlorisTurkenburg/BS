@@ -27,7 +27,7 @@ void free_array(char ***array);
 char *trimwhitespace(char *str);
 int executeCommand(char *cmdline, pipes_list *pipes);
 void parseCommand(unsigned char *command_string);
-int scanLine(FILE *fd);
+char * scanLine(FILE *fd);
 void signal_handler(int s);
 int split_string(char *string, char ***array, char split_character);
 

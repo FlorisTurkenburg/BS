@@ -157,7 +157,7 @@ void parseCommand(unsigned char *command_string) {
 }
 
 
-int scanLine(FILE *fd) {
+char * scanLine(FILE *fd) {
     int maxsize = 32, size_left = maxsize;
     char *input = malloc((sizeof(char)) * maxsize);
     char c;
