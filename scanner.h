@@ -27,5 +27,6 @@ char *trimwhitespace(char *str);
 void executeCommand(unsigned char *commandStr);
 void parseCommand(unsigned char *commandStr);
 int scanLine(FILE *fd);
+void signal_handler(int s);
 
 #endif
