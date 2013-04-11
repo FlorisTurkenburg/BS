@@ -99,8 +99,8 @@ void signal_handler(int s) {
 /*
 * trimwhitespace function from http://tinyurl.com/trimwhitespacestandard
 */
-char *trimwhitespace(char *string) {
-    char *end;
+unsigned char *trimwhitespace(unsigned char *string) {
+    unsigned char *end;
 
     while(isspace(*string)) string++;
 
@@ -119,7 +119,7 @@ char *trimwhitespace(char *string) {
 
 
 
-int executeCommand(char *cmdline, pipes_list *pipes) {
+int executeCommand(unsigned char *cmdline, pipes_list *pipes) {
     int cmdline_length = strlen(cmdline), pid = 0;
     
     // check for buildin functions
@@ -142,7 +142,7 @@ int executeCommand(char *cmdline, pipes_list *pipes) {
 void parseCommand(unsigned char *command_string) {
     int pipe_count, pid;
     pipes_list *pipes;
-    char **segments;
+    unsigned char **segments;
 
     pipe_count = split_string(command_string, &segments, '|') - 1;
     pipes = create_pipes(pipe_count);
