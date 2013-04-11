@@ -24,6 +24,7 @@ typedef int builtinFun (char *command);
 
 static int terminate = 0;
 static int calls = 0;
+static char chwd[2048];
 
 
 struct builtin_Func {
@@ -61,6 +62,14 @@ int check_allocation(void *pntr) {
         return 0;
     }
     return 1;
+}
+
+void signal_handler(int s) {
+
+    if(calls)
+        calls = 0;
+    printf("\n");
+    signal(s, signal_handler);
 }
 
 
@@ -135,7 +144,7 @@ int scanLine(FILE *fd) {
     char *input = malloc((sizeof(char)) * maxsize);
     char c;
 
-    if(!alloc_check(input)) 
+    if(!check_allocation(input)) 
         return input;
 
     while(!terminate && (c = fgetc(fd)) 
@@ -147,7 +156,7 @@ int scanLine(FILE *fd) {
 
             input = realloc(input, maxsize *= 2);
 
-            if(!alloc_check(input)) 
+            if(!check_allocation(input)) 
                 return input;
         }
     }
@@ -164,7 +173,7 @@ int scanLine(FILE *fd) {
 
     input[maxsize - size_left] = '\0';
     input = realloc(input, maxsize - size_left + 1);
-    if(!alloc_check(input))
+    if(!check_allocation(input))
         return input;
 
     return input;
@@ -173,7 +182,7 @@ int scanLine(FILE *fd) {
 
 void run_shell() {
     char *input;
-    //getcwd(cwd, sizeof(cwd));
+    //getchwd(chwd, sizeof(chwd));
 
     do {
         printf("myShell>");
@@ -187,7 +196,7 @@ void run_shell() {
 
 
 int main(int argc, char *argv[], char *envp[]) {
-    struct sigaction new_sa, new_sa_2, new_sa_3;
+    /*struct sigaction new_sa, new_sa_2, new_sa_3;
     struct sigaction old_sa, old_sa_2, old_sa_3;
 
     sigfillset(&new_sa.sa_mask);
@@ -204,7 +213,11 @@ int main(int argc, char *argv[], char *envp[]) {
     sigfillset(&new_sa_3.sa_mask);
     new_sa_3.sa_handler = SIG_IGN;
     new_sa_3.sa_flags = 0;
-    sigaction(SIGQUIT, &new_sa_3, 0);    
+    sigaction(SIGQUIT, &new_sa_3, 0);*/
+    
+    signal(SIGINT, signal_handler);    
+    signal(SIGQUIT, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     run_shell();
 }
@@ -235,7 +248,7 @@ int do_cd(char *command){
         perror("chdir() failed");
     }
 
-    getcwd(cwd, sizeof(cwd));
+    getchwd(chwd, sizeof(chwd));
 
     free_array(&args);
     
@@ -260,15 +273,15 @@ int do_source(char *command){
         return 0;
     }
 
-    source_num = ++source_calls;
+    source_num = ++calls;
 
-    while(source_calls >= source_num && (line = get_line_input(fp)) ) {
+    while(calls >= source_num && (line = get_line_input(fp)) ) {
         parseCommand(line);
         free(line);
     }
 
-    if(source_calls) {
-        source_calls--;
+    if(calls) {
+        calls--;
     }
 
     free_array(&args);
