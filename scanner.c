@@ -119,7 +119,7 @@ char *trimwhitespace(char *string) {
 
 
 
-void executeCommand(char *cmdline, pipes_list *pipes) {
+int executeCommand(char *cmdline, pipes_list *pipes) {
     int cmdline_length = strlen(cmdline), pid = 0;
     
     // check for buildin functions

@@ -25,7 +25,7 @@ int do_cd(char *command);
 int do_source(char *command);
 void free_array(char ***array);
 char *trimwhitespace(char *str);
-void executeCommand(char *cmdline, pipes_list *pipes);
+int executeCommand(char *cmdline, pipes_list *pipes);
 void parseCommand(unsigned char *command_string);
 int scanLine(FILE *fd);
 void signal_handler(int s);
