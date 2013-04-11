@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include "piping.h"
 
 typedef int builtinFun(char *command);
 
