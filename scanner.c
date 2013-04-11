@@ -36,12 +36,49 @@ static struct builtin_Func eigen[] = {
 };
 
 
-void free_array(char ***array) {
-    for(int i = 0; (*array)[i]; i++) {
-        free((*array)[i]);
+void free_arrayay(char ***arrayay) {
+    for(int i = 0; (*arrayay)[i]; i++) {
+        free((*arrayay)[i]);
     }
-    free(*array);
+    free(*arrayay);
 } 
+
+int split_stringing(char *string, char ***array, char split_character) {
+    int max = 5, size = 0, i = 0, j = 0, ignore = 0;
+    int stringing_length = strlen(string);
+
+    *array = malloc( (sizeof(char *)) * max );
+    if(!check_allocation(*array)) return -1;
+
+    /*  j defines the last place a cut was performed, 
+        i the iterator */
+    while(i < stringing_length) {
+        do {
+            if(string[i] == '"' || string[i] == (char)39 ) // 39 = '
+                ignore = ~ignore;
+            i++;
+        } while((ignore && string[i]) || 
+                (string[i] && string[i] != split_character));
+
+        (*array)[size] = (char *)malloc( (i-j+1) * sizeof(char));
+        strncpy((*array)[size], (char *)(string + j), i-j);
+        (*array)[size++][i-j] = '\0';
+        j = ++i; // skipping the space
+
+        if(size >= max) {
+            *array = realloc(*array, (max*=2) * sizeof(char *) );
+            if(!check_allocation(*array)) return -1;
+        }
+    }
+
+    //resize to the filled length + 1 for the NULL (to mak the end of the array)
+    *array = realloc(*array, (size + 1) * sizeof(char *));
+    if(!check_allocation(*array)) return -1;
+
+    (*array)[size] = NULL;
+    
+    return size;
+}
 
 
 int check_allocation(void *pntr) {
@@ -65,31 +102,31 @@ void signal_handler(int s) {
 /*
 * trimwhitespace function from http://tinyurl.com/trimwhitespacestandard
 */
-char *trimwhitespace(char *str) {
+char *trimwhitespace(char *string) {
     char *end;
 
-    while(isspace(*str)) str++;
+    while(isspace(*string)) string++;
 
-    if(*str == 0) {
-        return str;
+    if(*string == 0) {
+        return string;
     }
 
-    end = str + strlen(str) - 1;
-    while(end > str && isspace(*end)) {
+    end = string + strlen(string) - 1;
+    while(end > string && isspace(*end)) {
         end--;
     }
     *(end+1) = 0;
 
-    return str;
+    return string;
 }
 
 
-void executeCommand (unsigned char *commandStr) {
+void executeCommand (unsigned char *commandstring) {
     unsigned char *args[MAX_ARGS] = {NULL};
 
 
     int i = 1;
-    args[0] = strtok(commandStr, " \t\n");
+    args[0] = strtok(commandstring, " \t\n");
     while ((args[i] = strtok(NULL, " \t\n"))) {
         i++;
     }
@@ -102,27 +139,27 @@ void executeCommand (unsigned char *commandStr) {
     exit(-2);
 }
 
-void parseCommand (unsigned char *commandStr) {
+void parseCommand (unsigned char *commandstring) {
     unsigned char *pipeChar;
 
 
-    if ((pipeChar = strchr (commandStr, '|')))
+    if ((pipeChar = strchr (commandstring, '|')))
       {
-          unsigned char commandStr1[MAX_LINE];
-          unsigned char *cpntr = commandStr;
-          unsigned char *cpntr1 = commandStr1;
+          unsigned char commandstring1[MAX_LINE];
+          unsigned char *cpntr = commandstring;
+          unsigned char *cpntr1 = commandstring1;
 
           while (cpntr != pipeChar)
             {
                 *(cpntr1++) = *(cpntr++);
             }
           *cpntr1 = 0;
-          executeCommand (commandStr1);
+          executeCommand (commandstring1);
 
           parseCommand (pipeChar + 1);
       }
 
-    executeCommand(commandStr);
+    executeCommand(commandstring);
 }
 
 
@@ -171,11 +208,11 @@ int scanLine(FILE *fd) {
 
 void run_shell() {
     char *input;
-    //getchwd(chwd, sizeof(chwd));
+    getcwd(chwd, sizeof(chwd));
 
     do {
         printf("myShell>");
-        input = scanline(stdin);
+        input = scanLine(stdin);
         if(!terminate && input) {
             parseCommand(input);
         }
@@ -225,7 +262,7 @@ int do_exit (char *command){
 
 int do_cd(char *command){
     char **args;
-    int arg_len = splitstr(command, &args, ' ');
+    int arg_len = split_stringing(command, &args, ' ');
 
     if(arg_len < 1) {
         printf("Too few arguments\n");
@@ -237,9 +274,9 @@ int do_cd(char *command){
         perror("chdir() failed");
     }
 
-    getchwd(chwd, sizeof(chwd));
+    getcwd(chwd, sizeof(chwd));
 
-    free_array(&args);
+    free_arrayay(&args);
     
     return 1;
 }
@@ -248,7 +285,7 @@ int do_cd(char *command){
 int do_source(char *command){
     FILE *fp;
     char **args, *line;
-    int arg_len = splitstr(command, &args, ' ');
+    int arg_len = split_stringing(command, &args, ' ');
     int source_num;
 
     if(arg_len < 1) {
@@ -264,7 +301,7 @@ int do_source(char *command){
 
     source_num = ++calls;
 
-    while(calls >= source_num && (line = get_line_input(fp)) ) {
+    while(calls >= source_num && (line = scanLine(fp)) ) {
         parseCommand(line);
         free(line);
     }
@@ -273,7 +310,7 @@ int do_source(char *command){
         calls--;
     }
 
-    free_array(&args);
+    free_arrayay(&args);
 
     fclose(fp);
 

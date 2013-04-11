@@ -5,19 +5,19 @@
 /*  Creates pipes, 2 for each counted pipe char (count) */
 pipe_list_t *create_pipes(int count) {
     pipe_list_t *pipes = malloc(sizeof(pipe_list_t));
-    if(!alloc_check(pipes)) {
+    if(!check_allocation(pipes)) {
         return 0;
     }
 
     if(count > 0) {
         pipes->pipes = malloc(2 * count * sizeof(int *));
-        if(!alloc_check(pipes->pipes)) {
+        if(!check_allocation(pipes->pipes)) {
             return 0;
         }
 
         for(int i = 0; i < count; i++ ) {
             (pipes->pipes)[i] = malloc(2 * sizeof(int *));
-            if(!alloc_check(pipes->pipes[i])) {
+            if(!check_allocation(pipes->pipes[i])) {
                 free(pipes->pipes);
                 free(pipes);
                 return 0;
