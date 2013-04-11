@@ -1,5 +1,5 @@
-#ifndef scanner.h
-#define scanner.h
+#ifndef scanner_h
+#define scanner_h
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,5 +28,6 @@ void executeCommand(char *cmdline, pipes_list *pipes);
 void parseCommand(unsigned char *command_string);
 int scanLine(FILE *fd);
 void signal_handler(int s);
+int split_string(char *string, char ***array, char split_character);
 
 #endif

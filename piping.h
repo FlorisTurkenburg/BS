@@ -1,5 +1,5 @@
-#ifndef piping.h
-#define piping.h
+#ifndef piping_h
+#define piping_h
 
 #include <unistd.h>
 #include <stdlib.h>
