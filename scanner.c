@@ -26,7 +26,6 @@ static int calls = 0;
 static char chwd[2048];
 
 
-
 static struct builtin_Func eigen[] = {
     {do_exit, "exit"},
     {do_cd, "cd"},
@@ -121,24 +120,34 @@ char *trimwhitespace(char *string) {
 }
 
 
+<<<<<<< HEAD
 void executeCommand (unsigned char *commandstring) {
+=======
+void executeCommand(unsigned char *commandStr) {
+>>>>>>> b05f97d7ca5313c53ac53d3395185fbf3d26056d
     unsigned char *args[MAX_ARGS] = {NULL};
 
 
     int i = 1;
+<<<<<<< HEAD
     args[0] = strtok(commandstring, " \t\n");
     while ((args[i] = strtok(NULL, " \t\n"))) {
+=======
+    args[0] = strtok(commandStr, " \t\n");
+    while((args[i] = strtok(NULL, " \t\n"))) {
+>>>>>>> b05f97d7ca5313c53ac53d3395185fbf3d26056d
         i++;
     }
-    if (strchr(args[0], '/')) {
-          fprintf(stderr, "Attempt to call function '%s' not"
-                          "in the PATH environment variable\n", args[0]);
-          exit(-1);
+    if(strchr(args[0], '/')) {
+        fprintf(stderr, "Attempt to call function '%s' not"
+                        "in the PATH environment variable\n", args[0]);
+        exit(-1);
     }
 
     exit(-2);
 }
 
+<<<<<<< HEAD
 void parseCommand (unsigned char *commandstring) {
     unsigned char *pipeChar;
 
@@ -155,9 +164,25 @@ void parseCommand (unsigned char *commandstring) {
             }
           *cpntr1 = 0;
           executeCommand (commandstring1);
+=======
+void parseCommand(unsigned char *commandStr) {
+    unsigned char *pipeChar;
 
-          parseCommand (pipeChar + 1);
-      }
+
+    if((pipeChar = strchr(commandStr, '|'))) {
+        unsigned char commandStr1[MAX_LINE];
+        unsigned char *cpntr = commandStr;
+        unsigned char *cpntr1 = commandStr1;
+
+        while(cpntr != pipeChar) {
+            *(cpntr1++) = *(cpntr++);
+        }
+        *cpntr1 = 0;
+        executeCommand(commandStr1);
+>>>>>>> b05f97d7ca5313c53ac53d3395185fbf3d26056d
+
+        parseCommand(pipeChar + 1);
+    }
 
     executeCommand(commandstring);
 }
@@ -250,7 +275,7 @@ int main(int argc, char *argv[], char *envp[]) {
 
 
 
-int do_exit (char *command){
+int do_exit(char *command){
     if(!calls) {
         terminate = 1;
     } else {

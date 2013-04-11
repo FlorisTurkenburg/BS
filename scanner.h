@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 
-typedef int builtinFun (char *command);
+typedef int builtinFun(char *command);
 
 struct builtin_Func {
     builtinFun *fun;
@@ -24,8 +24,9 @@ int do_cd(char *command);
 int do_source(char *command);
 void free_array(char ***array);
 char *trimwhitespace(char *str);
-void executeCommand (unsigned char *commandStr);
-void parseCommand (unsigned char *commandStr);
+void executeCommand(unsigned char *commandStr);
+void parseCommand(unsigned char *commandStr);
 int scanLine(FILE *fd);
+void signal_handler(int s);
 
 #endif
