@@ -19,23 +19,12 @@
 #define MAX_LINE (2 * MAX_ARGS)
 
 
-typedef int builtinFun (char *command);
 
 
 static int terminate = 0;
 static int calls = 0;
 static char chwd[2048];
 
-
-struct builtin_Func {
-    builtinFun *fun;
-    char name[32];
-};
-
-
-int do_exit(char *command);
-int do_cd(char *command);
-int do_source(char *command);
 
 
 static struct builtin_Func eigen[] = {
