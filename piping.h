@@ -7,13 +7,13 @@
 
 typedef struct {
     int **pipes;
-    int curr;
+    int current;
     int length;
 } pipes_list;
 
-pipes_list *create_pipes(int count);
-void cleanup_pipes(pipes_list *pipes);
-int *curr_pipe(pipes_list *pipes);
+pipes_list *make_pipes(int count);
+void free_pipes(pipes_list *pipes);
+int *current_pipe(pipes_list *pipes);
 int *prev_pipe(pipes_list *pipes);
 
 #endif

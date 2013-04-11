@@ -3,7 +3,7 @@
 
 
 /*  Creates pipes, 2 for each counted pipe char (count) */
-pipes_list *create_pipes(int count) {
+pipes_list *make_pipes(int count) {
     pipes_list *pipes = malloc(sizeof(pipes_list));
     if(!check_allocation(pipes)) {
         return 0;
@@ -29,13 +29,13 @@ pipes_list *create_pipes(int count) {
     }
 
     pipes->length = count;
-    pipes->curr = 0;
+    pipes->current = 0;
 
     return pipes;
 }
 
 /*  Frees all pipes */
-void cleanup_pipes(pipes_list *pipes) {
+void free_pipes(pipes_list *pipes) {
     for(int i = 0; i < pipes->length; i++) {
         free(pipes->pipes[i]);
     } 
@@ -45,12 +45,12 @@ void cleanup_pipes(pipes_list *pipes) {
     free(pipes);
 }
 
-/*  Returns the current pipe */
-int *curr_pipe(pipes_list *pipes) {
-    return pipes->pipes[pipes->curr];
+/*  Returns the currentent pipe */
+int *current_pipe(pipes_list *pipes) {
+    return pipes->pipes[pipes->current];
 }
 
 /*  Returns the previous pipe */
 int *prev_pipe(pipes_list *pipes) {
-    return pipes->pipes[pipes->curr-1];
+    return pipes->pipes[pipes->current-1];
 }
