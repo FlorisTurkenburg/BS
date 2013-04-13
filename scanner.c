@@ -189,7 +189,7 @@ int execute_command(char *command_line, pipes_list *pipes) {
 void parse_command(char *command_string) {
     int pipe_count, pid;
     pipes_list *pipes;
-    char **segments;
+    unsigned char **segments;
 
     pipe_count = split_string(command_string, &segments, '|') - 1;
     pipes = make_pipes(pipe_count);
