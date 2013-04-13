@@ -1,27 +1,25 @@
 /*
 *
+* NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
+* STUDENTID: 10346643, HIERINVULLENFLORIS.
+* DATE: 15-03-2013.
 *
+* files: scanner.c, scanner.h, piping.c, piping.h.
 *
-*
-*
-*
-*
-*
-*
-*
+* This file contains a minimalist shell.
 *
 */
 
 #include "scanner.h"
 #include "piping.h"
 
-#define MAX_ARGS (1024)
-#define MAX_LINE (2 * MAX_ARGS)
+#define MAX_arguments (1024)
+#define MAX_LINE (2 * MAX_arguments)
 
 
 static int terminate = 0;
 static int calls = 0;
-static char chwd[2048];
+static char cwd[2048];
 
 
 static struct builtin_Func eigen[] = {
@@ -41,17 +39,20 @@ void free_array(char ***array) {
 } 
 
 int split_string(char *string, char ***array, char split_character) {
-    int max = 5, size = 0, i = 0, j = 0, ignore = 0;
+    int max = 5;
+    int size = 0;
+    int i = 0;
+    int j = 0;
+    int ignore = 0;
     int string_length = strlen(string);
 
     *array = malloc((sizeof(char *)) * max);
-    if(!check_allocation(*array)) return -1;
-
-    /*  j defines the last place a cut was performed, 
-        i the iterator */
+    if(!check_allocation(*array)) {
+        return -1;
+    }
     while(i < string_length) {
         do {
-            if(string[i] == '"' || string[i] == (char)39 ) // 39 = '
+            if(string[i] == '"' || string[i] == (char)39 )
                 ignore = ~ignore;
             i++;
         } while((ignore && string[i]) || 
@@ -60,7 +61,7 @@ int split_string(char *string, char ***array, char split_character) {
         (*array)[size] = (char *)malloc( (i-j+1) * sizeof(char));
         strncpy((*array)[size], (char *)(string + j), i-j);
         (*array)[size++][i-j] = '\0';
-        j = ++i; // skipping the space
+        j = ++i;
 
         if(size >= max) {
             *array = realloc(*array, (max*=2) * sizeof(char *) );
@@ -68,7 +69,6 @@ int split_string(char *string, char ***array, char split_character) {
         }
     }
 
-    //resize to the filled length + 1 for the NULL (to mak the end of the array)
     *array = realloc(*array, (size + 1) * sizeof(char *));
     if(!check_allocation(*array)) return -1;
 
@@ -97,12 +97,14 @@ void signal_handler(int s) {
 
 
 /*
-* trimwhitespace function from http://tinyurl.com/trimwhitespacestandard
+* trim_whitespace function from http://tinyurl.com/trim_whitespacestandard
 */
-char *trimwhitespace(char *string) {
+char *trim_whitespace(char *string) {
     char *end;
 
-    while(isspace(*string)) string++;
+    while(isspace(*string)){
+        string++;
+    }
 
     if(*string == 0) {
         return string;
@@ -112,43 +114,88 @@ char *trimwhitespace(char *string) {
     while(end > string && isspace(*end)) {
         end--;
     }
+    
     *(end+1) = 0;
 
     return string;
 }
 
 
+int execute_program(char *command_line, pipes_list *pipes) {
+    char **arguments;
+    int arg_len, pid;
 
-int executeCommand(char *cmdline, pipes_list *pipes) {
-    int cmdline_length = strlen(cmdline), pid = 0;
-    
-    // check for buildin functions
+    arg_len = split_string(command_line, &arguments, ' ');
+    if(arg_len > 0) {
+        if((pid = fork()) < 0) {
+            perror("Fork failed");
+            return -1;
+        }
+
+        if(!pid) {
+            if(pipes->current < pipes->length) {
+                if(dup2(current_pipe(pipes)[1], STDOUT_FILENO) < 0) {
+                    perror("Link to output stream failed");
+                }
+            }
+
+            if(pipes->current > 0) {
+                close(previous_pipe(pipes)[1]);
+                if(dup2(previous_pipe(pipes)[0], STDIN_FILENO) < 0) {
+                    perror("Link to input stream failed");
+                }
+            }
+
+            if(execvp(arguments[0], arguments) < 0) {
+                if(errno == ENOENT) {
+                    printf("%s: command not found\n", arguments[0]);
+                } else {
+                    perror(arguments[0]);
+                }
+            }
+
+            exit(EXIT_SUCCESS);
+        } else {
+            if(pipes->current < pipes->length) {
+                close(current_pipe(pipes)[1]);
+            }
+            pipes->current++;
+        }
+    }
+
+    free_array(&arguments);
+    return pid;
+}
+
+
+int execute_command(char *command_line, pipes_list *pipes) {
+    int command_line_length = strlen(command_line), pid = 0;
+
     for(int i = 0; eigen[i].fun; i++) {
-        int cmd_length = strlen(eigen[i].name);
-        if(!strncmp(cmdline, eigen[i].name, cmd_length) 
-        && (cmdline_length <= cmd_length || isspace(cmdline[cmd_length])) ) {
+        int command_length = strlen(eigen[i].name);
+        if(!strncmp(command_line, eigen[i].name, command_length) 
+        && (command_line_length <= command_length || isspace(command_line[command_length]))) {
 
-            eigen[i].fun(cmdline);
+            eigen[i].fun(command_line);
 
             return 0;
         }
     }
 
-    /* no buildin, executes program */
-    pid = exec_program(cmdline, pipes);
+    pid = execute_program(command_line, pipes);
     return pid;
 }
 
-void parseCommand(unsigned char *command_string) {
+void parse_command(char *command_string) {
     int pipe_count, pid;
     pipes_list *pipes;
     char **segments;
 
     pipe_count = split_string(command_string, &segments, '|') - 1;
-    pipes = create_pipes(pipe_count);
+    pipes = make_pipes(pipe_count);
 
     for(int i = 0; segments[i]; i++) {
-        pid = executeCommand(trimwhitespace(segments[i]), pipes);
+        pid = execute_command(trim_whitespace(segments[i]), pipes);
         waitpid(pid, NULL, 0);
     }
 
@@ -157,7 +204,7 @@ void parseCommand(unsigned char *command_string) {
 }
 
 
-char * scanLine(FILE *fd) {
+char *scan_line(FILE *fd) {
     int maxsize = 32, size_left = maxsize;
     char *input = malloc((sizeof(char)) * maxsize);
     char c;
@@ -183,7 +230,6 @@ char * scanLine(FILE *fd) {
         putchar('\n');
     }
 
-    // no input
     if(!(maxsize - size_left)) {
         free(input);
         return NULL;
@@ -200,13 +246,13 @@ char * scanLine(FILE *fd) {
 
 void run_shell() {
     char *input;
-    getcwd(chwd, sizeof(chwd));
+    getcwd(cwd, sizeof(cwd));
 
     do {
-        printf("myShell>");
-        input = scanLine(stdin);
+        printf("%s--SHELL>", cwd);
+        input = scan_line(stdin);
         if(!terminate && input) {
-            parseCommand(input);
+            parse_command(input);
         }
         free(input);
     }while(!terminate);
@@ -214,25 +260,6 @@ void run_shell() {
 
 
 int main(int argc, char *argv[], char *envp[]) {
-    /*struct sigaction new_sa, new_sa_2, new_sa_3;
-    struct sigaction old_sa, old_sa_2, old_sa_3;
-
-    sigfillset(&new_sa.sa_mask);
-    new_sa.sa_handler = SIG_IGN;
-    new_sa.sa_flags = 0;
-    sigaction(SIGINT, &new_sa, 0); 
-
-    sigfillset(&new_sa_2.sa_mask);
-    new_sa_2.sa_handler = SIG_IGN;
-    new_sa_2.sa_flags = 0;
-    sigaction(SIGTERM, &new_sa_2, 0); 
-
-    
-    sigfillset(&new_sa_3.sa_mask);
-    new_sa_3.sa_handler = SIG_IGN;
-    new_sa_3.sa_flags = 0;
-    sigaction(SIGQUIT, &new_sa_3, 0);*/
-    
     signal(SIGINT, signal_handler);    
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -253,22 +280,22 @@ int do_exit(char *command){
 
 
 int do_cd(char *command){
-    char **args;
-    int arg_len = split_string(command, &args, ' ');
+    char **arguments;
+    int arg_len = split_string(command, &arguments, ' ');
 
     if(arg_len < 1) {
         printf("Too few arguments\n");
-        printf("Using: %s directory\n", args[0]);
+        printf("Using: %s directory\n", arguments[0]);
         return 0;
     }
 
-    if(chdir(args[1]) < 0) {
+    if(chdir(arguments[1]) < 0) {
         perror("chdir() failed");
     }
 
-    getcwd(chwd, sizeof(chwd));
+    getcwd(cwd, sizeof(cwd));
 
-    free_array(&args);
+    free_array(&arguments);
     
     return 1;
 }
@@ -276,25 +303,25 @@ int do_cd(char *command){
 
 int do_source(char *command){
     FILE *fp;
-    char **args, *line;
-    int arg_len = split_string(command, &args, ' ');
-    int source_num;
+    char **arguments, *line;
+    int arg_len = split_string(command, &arguments, ' ');
+    int number_source;
 
     if(arg_len < 1) {
         printf("Wrong amount of arguments\n");
-        printf("Using: %s file\n",args[0]);
+        printf("Using: %s file\n",arguments[0]);
         return 0;
     }
 
-    if((fp = fopen(args[1],"r")) == NULL) {
-        perror(args[0]);
+    if((fp = fopen(arguments[1],"r")) == NULL) {
+        perror(arguments[0]);
         return 0;
     }
 
-    source_num = ++calls;
+    number_source = ++calls;
 
-    while(calls >= source_num && (line = scanLine(fp)) ) {
-        parseCommand(line);
+    while(calls >= number_source && (line = scan_line(fp)) ) {
+        parse_command(line);
         free(line);
     }
 
@@ -302,7 +329,7 @@ int do_source(char *command){
         calls--;
     }
 
-    free_array(&args);
+    free_array(&arguments);
 
     fclose(fp);
 

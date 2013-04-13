@@ -1,8 +1,19 @@
+/*
+*
+* NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
+* STUDENTID: 10346643, HIERINVULLENFLORIS.
+* DATE: 15-03-2013.
+*
+* files: scanner.c, scanner.h, piping.c, piping.h.
+*
+* This file contains a minimalist shell.
+*
+*/
+
 #include "piping.h"
 #include "scanner.h"
 
 
-/*  Creates pipes, 2 for each counted pipe char (count) */
 pipes_list *make_pipes(int count) {
     pipes_list *pipes = malloc(sizeof(pipes_list));
     if(!check_allocation(pipes)) {
@@ -23,7 +34,7 @@ pipes_list *make_pipes(int count) {
                 return 0;
             }
             if(pipe(pipes->pipes[i]) < 0) {
-                perror("Couldn't create a pipe");
+                perror("Pipe create failed");
             }
         }
     }
@@ -34,7 +45,6 @@ pipes_list *make_pipes(int count) {
     return pipes;
 }
 
-/*  Frees all pipes */
 void free_pipes(pipes_list *pipes) {
     for(int i = 0; i < pipes->length; i++) {
         free(pipes->pipes[i]);
@@ -45,12 +55,10 @@ void free_pipes(pipes_list *pipes) {
     free(pipes);
 }
 
-/*  Returns the currentent pipe */
 int *current_pipe(pipes_list *pipes) {
     return pipes->pipes[pipes->current];
 }
 
-/*  Returns the previous pipe */
-int *prev_pipe(pipes_list *pipes) {
+int *previous_pipe(pipes_list *pipes) {
     return pipes->pipes[pipes->current-1];
 }

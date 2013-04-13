@@ -1,3 +1,15 @@
+/*
+*
+* NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
+* STUDENTID: 10346643, HIERINVULLENFLORIS.
+* DATE: 15-03-2013.
+*
+* files: scanner.c, scanner.h, piping.c, piping.h.
+*
+* This file contains a minimalist shell.
+*
+*/
+
 #ifndef scanner_h
 #define scanner_h
 
@@ -24,10 +36,10 @@ int do_exit(char *command);
 int do_cd(char *command);
 int do_source(char *command);
 void free_array(char ***array);
-char *trimwhitespace(char *str);
-int executeCommand(char *cmdline, pipes_list *pipes);
-void parseCommand(unsigned char *command_string);
-char * scanLine(FILE *fd);
+char *trim_whitespace(char *str);
+int execute_command(char *command_line, pipes_list *pipes);
+void parse_command(char *command_string);
+char *scan_line(FILE *fd);
 void signal_handler(int s);
 int split_string(char *string, char ***array, char split_character);
 
