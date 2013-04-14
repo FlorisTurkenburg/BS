@@ -1,14 +1,14 @@
 /*
-*
-* NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
-* STUDENTID: 10346643, HIERINVULLENFLORIS.
-* DATE: 15-03-2013.
-*
-* files: scanner.c, scanner.h, piping.c, piping.h.
-*
-* This file contains a minimalist shell.
-*
-*/
+ *
+ * NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
+ * STUDENTID: 10346643, 10419667.
+ * DATE: 15-03-2013.
+ *
+ * files: scanner.c, scanner.h, piping.c, piping.h.
+ *
+ * This file contains a minimalist shell.
+ *
+ */
 
 #ifndef scanner_h
 #define scanner_h
@@ -30,6 +30,7 @@ struct builtin_Func {
     char name[32];
 };
 
+/* Prototypes. */
 void run_shell();
 int check_allocation(void *);
 int do_exit(char *command);

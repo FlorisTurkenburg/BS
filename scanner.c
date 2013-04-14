@@ -1,14 +1,14 @@
 /*
-*
-* NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
-* STUDENTID: 10346643, HIERINVULLENFLORIS.
-* DATE: 15-03-2013.
-*
-* files: scanner.c, scanner.h, piping.c, piping.h.
-*
-* This file contains a minimalist shell.
-*
-*/
+ *
+ * NAME: SAMUEL NORBURY, FLORIS TURKENBURG.
+ * STUDENTID: 10346643, 10419667.
+ * DATE: 15-03-2013.
+ *
+ * files: scanner.c, scanner.h, piping.c, piping.h.
+ *
+ * This file contains a minimalist shell.
+ *
+ */
 
 #include "scanner.h"
 #include "piping.h"
@@ -21,7 +21,7 @@ static int terminate = 0;
 static int calls = 0;
 static char cwd[2048];
 
-
+/* An array to determine which function needs to be called. */
 static struct builtin_Func eigen[] = {
     {do_exit, "exit"},
     {do_cd, "cd"},
@@ -30,14 +30,17 @@ static struct builtin_Func eigen[] = {
     {NULL, ""}
 };
 
-
+/* Function to free an array. */
 void free_array(char ***array) {
     for(int i = 0; (*array)[i]; i++) {
         free((*array)[i]);
     }
     free(*array);
-} 
+}
 
+/* Splitting the commandline input at every split character and putting the
+ * seperate words in an array.
+ */
 int split_string(char *string, char ***array, char split_character) {
     int max = 5;
     int size = 0;
@@ -55,7 +58,7 @@ int split_string(char *string, char ***array, char split_character) {
             if(string[i] == '"' || string[i] == (char)39 )
                 ignore = ~ignore;
             i++;
-        } while((ignore && string[i]) || 
+        } while((ignore && string[i]) ||
                 (string[i] && string[i] != split_character));
 
         (*array)[size] = (char *)malloc( (i-j+1) * sizeof(char));
@@ -73,11 +76,11 @@ int split_string(char *string, char ***array, char split_character) {
     if(!check_allocation(*array)) return -1;
 
     (*array)[size] = NULL;
-    
+
     return size;
 }
 
-
+/* Check if memory is succesfully allocated. If not, the shell is terminated. */
 int check_allocation(void *pntr) {
     if(!pntr) {
         perror("Couldn't allocate memory");
@@ -87,6 +90,7 @@ int check_allocation(void *pntr) {
     return 1;
 }
 
+/* Handle (ignore) the signals. */
 void signal_handler(int s) {
 
     if(calls)
@@ -97,8 +101,8 @@ void signal_handler(int s) {
 
 
 /*
-* trim_whitespace function from http://tinyurl.com/trim_whitespacestandard
-*/
+ * trim_whitespace function from http://tinyurl.com/trim_whitespacestandard
+ */
 char *trim_whitespace(char *string) {
     char *end;
 
@@ -114,13 +118,13 @@ char *trim_whitespace(char *string) {
     while(end > string && isspace(*end)) {
         end--;
     }
-    
+
     *(end+1) = 0;
 
     return string;
 }
 
-
+/* Execute the program with the use of forks, and handle any present pipes. */
 int execute_program(char *command_line, pipes_list *pipes) {
     char **arguments;
     int arg_len, pid;
@@ -167,13 +171,13 @@ int execute_program(char *command_line, pipes_list *pipes) {
     return pid;
 }
 
-
+/* Call the corresponding function from the given command. */
 int execute_command(char *command_line, pipes_list *pipes) {
     int command_line_length = strlen(command_line), pid = 0;
 
     for(int i = 0; eigen[i].fun; i++) {
         int command_length = strlen(eigen[i].name);
-        if(!strncmp(command_line, eigen[i].name, command_length) 
+        if(!strncmp(command_line, eigen[i].name, command_length)
         && (command_line_length <= command_length || isspace(command_line[command_length]))) {
 
             eigen[i].fun(command_line);
@@ -186,6 +190,9 @@ int execute_command(char *command_line, pipes_list *pipes) {
     return pid;
 }
 
+/* Prepare the given commandline and decide and execute the program for every
+ * command.
+ */
 void parse_command(char *command_string) {
     int pipe_count, pid;
     pipes_list *pipes;
@@ -203,16 +210,16 @@ void parse_command(char *command_string) {
     free_array(&segments);
 }
 
-
+/* Scan the user input and put in in a string. */
 char *scan_line(FILE *fd) {
     int maxsize = 32, size_left = maxsize;
     char *input = malloc((sizeof(char)) * maxsize);
     char c;
 
-    if(!check_allocation(input)) 
+    if(!check_allocation(input))
         return input;
 
-    while(!terminate && (c = fgetc(fd)) 
+    while(!terminate && (c = fgetc(fd))
         && c != EOF && c != '\n' && c != '#') {
         input[maxsize - size_left] = c;
 
@@ -221,7 +228,7 @@ char *scan_line(FILE *fd) {
 
             input = realloc(input, maxsize *= 2);
 
-            if(!check_allocation(input)) 
+            if(!check_allocation(input))
                 return input;
         }
     }
@@ -243,7 +250,9 @@ char *scan_line(FILE *fd) {
     return input;
 }
 
-
+/* Run the shell and print the commandlines as long as the doesn't gets
+ * terminated.
+ */
 void run_shell() {
     char *input;
     getcwd(cwd, sizeof(cwd));
@@ -258,9 +267,9 @@ void run_shell() {
     }while(!terminate);
 }
 
-
+/* Ignore the 3 signals and run the shell. */
 int main(int argc, char *argv[], char *envp[]) {
-    signal(SIGINT, signal_handler);    
+    signal(SIGINT, signal_handler);
     signal(SIGQUIT, signal_handler);
     signal(SIGTERM, signal_handler);
 
@@ -268,7 +277,7 @@ int main(int argc, char *argv[], char *envp[]) {
 }
 
 
-
+/* The function to terminate the shell. */
 int do_exit(char *command){
     if(!calls) {
         terminate = 1;
@@ -278,7 +287,7 @@ int do_exit(char *command){
     return 1;
 }
 
-
+/* Change the working directory. */
 int do_cd(char *command){
     char **arguments;
     int arg_len = split_string(command, &arguments, ' ');
@@ -296,11 +305,11 @@ int do_cd(char *command){
     getcwd(cwd, sizeof(cwd));
 
     free_array(&arguments);
-    
+
     return 1;
 }
 
-
+/* Open a source. */
 int do_source(char *command){
     FILE *fp;
     char **arguments, *line;
@@ -334,8 +343,4 @@ int do_source(char *command){
     fclose(fp);
 
     return 1;
-}  
-
-
-
-
+}
