@@ -4,9 +4,10 @@
  * STUDENTID: 10346643, 10419667.
  * DATE: 15-03-2013.
  *
- * files: scanner.c, scanner.h, piping.c, piping.h.
+ * Files: scanner.c, scanner.h, piping.c, piping.h.
  *
- * This file contains a minimalist shell.
+ * This file contains the structure definition and the prototypes for a pipe
+ * implementation.
  *
  */
 

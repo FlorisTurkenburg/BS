@@ -4,9 +4,9 @@
  * STUDENTID: 10346643, 10419667.
  * DATE: 15-03-2013.
  *
- * files: scanner.c, scanner.h, piping.c, piping.h.
+ * Files: scanner.c, scanner.h, piping.c, piping.h.
  *
- * This file contains a minimalist shell.
+ * This file contains the main functions for a minimalistic shell.
  *
  */
 
@@ -190,9 +190,7 @@ int execute_command(char *command_line, pipes_list *pipes) {
     return pid;
 }
 
-/* Prepare the given commandline and decide and execute the program for every
- * command.
- */
+/* Prepare the given commandline and execute the program for every command. */
 void parse_command(char *command_string) {
     int pipe_count, pid;
     pipes_list *pipes;
@@ -210,7 +208,7 @@ void parse_command(char *command_string) {
     free_array(&segments);
 }
 
-/* Scan the user input and put in in a string. */
+/* Scan the user input and put it in a string. */
 char *scan_line(FILE *fd) {
     int maxsize = 32, size_left = maxsize;
     char *input = malloc((sizeof(char)) * maxsize);
@@ -250,7 +248,7 @@ char *scan_line(FILE *fd) {
     return input;
 }
 
-/* Run the shell and print the commandlines as long as the doesn't gets
+/* Run the shell and print the commandlines as long as the shell doesn't gets
  * terminated.
  */
 void run_shell() {
