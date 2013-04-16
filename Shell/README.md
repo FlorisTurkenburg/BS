@@ -1,4 +1,0 @@
-BS
-==
-
-besturingssystemen

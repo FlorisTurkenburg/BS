@@ -1,4 +1,0 @@
-cd ..
-ls -l | grep simpleshell
-cd simpleshell
-ls -at | grep c | grep shell
