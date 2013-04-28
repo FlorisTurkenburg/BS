@@ -49,11 +49,13 @@ static void GiveMemory()
        {
            /* Allocation succeeded, now put in administration
             */
-           proc2->MEM_base = index;
+            proc2->MEM_base = index;
 
            /* You might want to move this process to the ready
              queue now
             */
+            ready_proc = proc2;
+            // proc2 nog verwijderen uit de new_proc????
        }
    }
 }
